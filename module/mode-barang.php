@@ -43,7 +43,7 @@ function insert($data)
     if ($gambar != null) {
         $gambar = uploadimg(null, $id);
     } else {
-        $gambar = 'default-brg.png';
+        $gambar = 'barang.jpg';
     }
 
     //gambar tidak sesuai validasi
@@ -60,7 +60,7 @@ function delete($id, $gbr)
 {
     global $koneksi;
 
-    $sqlDel = "DELETE FROM tbl_barang WHERE id_barang = '$id'";
+    $sqlDel= "DELETE FROM tbl_barang WHERE id_barang = '$id'";
     mysqli_query($koneksi, $sqlDel);
     if ($gbr != 'default-brg.png') {
         unlink('../assets/image/' . $gbr);
@@ -68,71 +68,61 @@ function delete($id, $gbr)
     return mysqli_affected_rows($koneksi);
 }
 
-function selectUser1($level)
-{
-    $result = null;
-    if ($level == 1) {
-        $result = "selected";
-    }
-    return $result;
-}
-function selectUser2($level)
-{
-    $result = null;
-    if ($level == 2) {
-        $result = "selected";
-    }
-    return $result;
-}
-function selectUser3($level)
-{
-    $result = null;
-    if ($level == 3) {
-        $result = "selected";
-    }
-    return $result;
-}
 
 function update($data)
 {
     global $koneksi;
 
-    $iduser = mysqli_real_escape_string($koneksi, $data['id']);
-    $username = strtolower(mysqli_real_escape_string($koneksi, $data['username']));
-    $fullname = mysqli_real_escape_string($koneksi, $data['fullname']);
-    $level = mysqli_real_escape_string($koneksi, $data['level']);
-    $address = mysqli_real_escape_string($koneksi, $data['address']);
+    $id = mysqli_real_escape_string($koneksi, $data['kode']);
+    $barcode = mysqli_real_escape_string($koneksi, $data['barcode']);
+    $name = mysqli_real_escape_string($koneksi, $data['nama_barang']);
+    $satuan = mysqli_real_escape_string($koneksi, $data['satuan']);
+    $harga_beli = mysqli_real_escape_string($koneksi, $data['harga_beli']);
+    $harga_jual = mysqli_real_escape_string($koneksi, $data['harga_jual']);
+    $stockmin = mysqli_real_escape_string($koneksi, $data['stock_minimal']);
+    $gbrlama = mysqli_real_escape_string($koneksi, $data['oldIld']);
     $gambar = mysqli_real_escape_string($koneksi, $_FILES['image']['name']);
-    $fotoLama = mysqli_real_escape_string($koneksi, $data['oldImg']);
 
-    // cek username sekarang
-    $queryUsername = mysqli_query($koneksi, "SELECT * FROM tbl_user WHERE userid = '$iduser'");
-    $dataUsername = mysqli_fetch_assoc($queryUsername);
-    $curUsername = $dataUsername['username'];
-
-    // cek username baru
-    $newUsername = mysqli_query($koneksi, "SELECT username FROM tbl_user WHERE username = '$username'");
-
-    if ($username !== $curUsername) {
-        if (mysqli_num_rows($newUsername)) {
-            echo "<script>alert('Username sudah terpakai, update data user gagal !');
-        document.location.href = 'data-user.php';
-        </script>";
-            return false;
-        }
+    // varidasi barcode
+    // cek bercode lama
+    $querybarcode = mysql_query($koneksi, "SELECT * FROM tbl_barang Where barcode = '$barcode'");
+    $databrg = mysql_fetch_assoc($querybarcode);
+    $curbarcode = $databrg['barcode'];
+    // barcode baru
+    $cekbarcode = mysql_query($koneksi, "SELECT * FROM tbl_barang WHERE barcode = '$barcode'");
+    // jika baarcode lama di ganti
+    if ($barcode != $curbarcode){
+        // jika barcode sudah ada
+         if (mysqli_num_rows($cekBarcode)) {
+        echo "<script>alert('Kode barcode sudah ada, barang gagal ditambahkan')</script>";
+        return false;
+     }
     }
-
     // cek gambar
-    if ($gambar != null) {
-        $url = "data-user.php";
-        $imgUser = uploadimg($url);
-        if ($fotoLama != 'default.png') {
-            @unlink('../assets/image/' . $fotoLama);
+if ($gambar != null) {
+    $url = 'index.php';
+    if($gbrLama == 'default-brg.jpg'){
+        $nmgbr = $id;
+    } else {
+        $nmgbr =$id . '-' . rand(10,100);
+    }
+        $imgBrg = uploadimg(null, $id);
+        if ($gbrLama != 'default-brg.jpg'){
+            @unlink('../assets/image/' . $gbrLama);
         }
     } else {
-        $imgUser = $fotoLama;
+        $imgBrg=  $brLama;
     }
-    mysqli_query($koneksi, "UPDATE tbl_user SET username = '$username', fullname = '$fullname', address = '$address', level = '$level', foto = '$imgUser' WHERE userid = '$iduser'");
 
+    mysqli_query($koneksi, "UPDATE tbl_barang SET 
+    barcode = '$barcode',
+    nama_barang = '$name',
+    harga_beli = '$harga_beli',
+    harga_jual = '$harga_jual',
+    satuan = '$satuan',
+    stock_minimal = '$stockmin',
+    gambar = '$imgBrg'
+    WHERE id_barang = '$id'
+    ");
     return mysqli_affected_rows($koneksi);
-}
+    }
